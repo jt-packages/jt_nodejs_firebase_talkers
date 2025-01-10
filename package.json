@@ -1,0 +1,11 @@
+{
+  "name": "jt_nodejs_firebase_talkers",
+  "version": "1.0.0",
+  "description": "Some shortcut to access firebase related functionalities.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Weiyan Tao (JT)",
+  "license": "MIT"
+}
