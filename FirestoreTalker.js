@@ -1,15 +1,15 @@
-const admin = require('./firebase');
-const firestore = admin.firestore();
-
 class FirestoreTalker {
-  constructor() { }
+  constructor({ firebaseAdmin }) {
+    this.admin = firebaseAdmin;
+    this.firestore = firebaseAdmin.firestore();
+  }
 
-  static async checkPathExistInFirestore({ path, fieldNames = [] }) {
+  async checkPathExistInFirestore({ path, fieldNames = [] }) {
     const pathSegments = path.split('/');
 
     // Document reference
     if (pathSegments.length % 2 === 0) {
-      const docRef = firestore.doc(path);
+      const docRef = this.firestore.doc(path);
       try {
         const docSnapshot = await docRef.get();
         // If the document doesn't exist, return false
@@ -30,7 +30,7 @@ class FirestoreTalker {
     }
     // Collection reference
     else {
-      const collectionRef = firestore.collection(path);
+      const collectionRef = this.firestore.collection(path);
       try {
         const snapshot = await collectionRef.limit(1).get();
         return !snapshot.empty;  // returns true if the collection has at least one document, false otherwise
@@ -41,12 +41,12 @@ class FirestoreTalker {
     }
   }
 
-  static async upsertFirestoreDocument({ documentPath, dataObject }) {
+  async upsertFirestoreDocument({ documentPath, dataObject }) {
     const pathSegments = documentPath.split('/');
 
     // Ensure the path points to a document
     if (pathSegments.length % 2 === 0) {
-      const documentRef = firestore.doc(documentPath);
+      const documentRef = this.firestore.doc(documentPath);
 
       try {
         // Use set with merge option for upsert behavior
@@ -62,11 +62,11 @@ class FirestoreTalker {
     }
   }
 
-  static async uploadDocumentToFirestore({ collectionPath, dataObject, idValue = null }) {
+  async uploadDocumentToFirestore({ collectionPath, dataObject, idValue = null }) {
     const pathSegments = collectionPath.split('/');
 
     if (pathSegments.length % 2 !== 0) {
-      const collectionRef = firestore.collection(collectionPath);
+      const collectionRef = this.firestore.collection(collectionPath);
 
       try {
         if (!idValue) {
@@ -88,11 +88,11 @@ class FirestoreTalker {
     }
   }
 
-  static async updateFirestoreDocument({ documentPath, changes }) {
+  async updateFirestoreDocument({ documentPath, changes }) {
     const pathSegments = documentPath.split('/');
 
     if (pathSegments.length % 2 === 0) {
-      const documentRef = firestore.doc(documentPath);
+      const documentRef = this.firestore.doc(documentPath);
 
       try {
         await documentRef.update(changes);
@@ -107,7 +107,7 @@ class FirestoreTalker {
     }
   }
 
-  static async getFromFirestore({ path, idFieldIdentifier = "id", queries = [] }) {
+  async getFromFirestore({ path, idFieldIdentifier = "id", queries = [] }) {
     const pathSegments = path.split('/');
     const _constructDataDict = ({ dataObject, idFieldIdentifier, idValue }) => {
       if (!idFieldIdentifier) {
@@ -121,7 +121,7 @@ class FirestoreTalker {
     }
 
     if (pathSegments.length % 2 === 0) {
-      const docRef = firestore.doc(path);
+      const docRef = this.firestore.doc(path);
 
       try {
         const docSnapshot = await docRef.get();
@@ -131,7 +131,7 @@ class FirestoreTalker {
         return null;
       }
     } else {
-      let collectionRef = firestore.collection(path);
+      let collectionRef = this.firestore.collection(path);
 
       // Loop through the query array and add a where clause for each condition in each field.
       for (let fieldQuery of queries) {
@@ -153,13 +153,13 @@ class FirestoreTalker {
     }
   }
 
-  static async removeFromFirestoreAtPath({ path, canBeCollection = false }) {
+  async removeFromFirestoreAtPath({ path, canBeCollection = false }) {
     const pathSegments = path.split('/');
 
     // If path is to a document
     if (pathSegments.length % 2 === 0) {
       try {
-        await firestore.doc(path).delete();
+        await this.firestore.doc(path).delete();
         console.log(`Document at path ${path} successfully deleted.`);
       } catch (error) {
         console.error("Error removing document:", error);
@@ -167,9 +167,9 @@ class FirestoreTalker {
     }
     // If path is to a collection
     else if (canBeCollection) {
-      const collectionRef = firestore.collection(path);
+      const collectionRef = this.firestore.collection(path);
       const docsSnapshot = await collectionRef.get();
-      const batch = firestore.batch();
+      const batch = this.firestore.batch();
       docsSnapshot.docs.forEach((doc) => {
         batch.delete(doc.ref);
       });
@@ -182,14 +182,14 @@ class FirestoreTalker {
     }
   }
 
-  static async incrementToDatabase({ documentPath, fieldname, delta }) {
+  async incrementToDatabase({ documentPath, fieldname, delta }) {
     const pathSegments = documentPath.split('/');
 
     if (pathSegments.length % 2 === 0) {
-      const documentRef = firestore.doc(documentPath);
+      const documentRef = this.firestore.doc(documentPath);
 
       try {
-        const increment = admin.firestore.FieldValue.increment(delta);
+        const increment = this.firestore.FieldValue.increment(delta);
         await documentRef.update({ [fieldname]: increment });
         return true;
       } catch (error) {
