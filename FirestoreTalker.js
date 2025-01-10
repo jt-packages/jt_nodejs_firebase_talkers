@@ -1,7 +1,7 @@
-const admin = require('../firebase');
+const admin = require('./firebase');
 const firestore = admin.firestore();
 
-class DatabaseTalker {
+class FirestoreTalker {
   constructor() { }
 
   static async checkPathExistInFirestore({ path, fieldNames = [] }) {
@@ -125,7 +125,7 @@ class DatabaseTalker {
 
       try {
         const docSnapshot = await docRef.get();
-        return _constructDataDict(idFieldIdentifier, docSnapshot.id, docSnapshot.data());
+        return _constructDataDict({ dataObject: docSnapshot.data(), idFieldIdentifier, idValue: docSnapshot.id });
       } catch (error) {
         console.error("Error fetching document:", error);
         return null;
@@ -203,4 +203,4 @@ class DatabaseTalker {
   }
 }
 
-module.exports = DatabaseTalker;
+module.exports = FirestoreTalker;
